@@ -1,12 +1,169 @@
 <head>
   <title>myOnlineTeaching</title>
+
+  <!-- main wavesurfer.js lib --> <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/1.2.3/wavesurfer.min.js"></script>
+  <!-- wavesurfer.js microphone --> <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/1.2.3/plugin/wavesurfer.microphone.min.js"></script>
+  <script src="https://rtcmulticonnection.herokuapp.com/dist/RTCMultiConnection.min.js"></script>
+  <script src="https://rtcmulticonnection.herokuapp.com/socket.io/socket.io.js"></script>
+  <script src="/dev/adapter.js"></script>
+  <script src="/dev/getHTMLMediaElement.js"></script>
+  <script src="/dev/FileBufferReader.js"></script>
+  <script src="bundle.js" charset="utf-8"></script>
+
+  <style>
+      .content {
+      max-width: 1280px;
+      min-width: 1280px;
+      margin: auto;
+      border: thick solid #f1f1f1;
+    }
+    .listHeader {
+      border: thick solid #f1f1f1;
+      margin: 0%;
+      padding: 2%;
+      width: 100%;
+      height: auto;
+      background-color: #461D7C;
+      color: white;
+      //background-image: url('images/headerWithLogo.png');
+      background-repeat: no-repeat;
+      background-size: contain;
+      overflow: hidden;
+    }
+    .listChatVideoControls {
+      border: thick solid #f1f1f1;
+      margin: 0%;
+      padding: 2%;
+      width: 100%;
+      height: auto;
+      background-color: #FDD023;
+     // background-image: url('images/Chat_PatientView_02.png');
+      background-repeat: no-repeat;
+      background-size: contain;
+      //overflow: hidden;
+      overflow-y: scroll;
+    }
+    .listChatVideos {
+      border: thick solid #f1f1f1;
+      margin: 0%;
+      padding: 0%;
+      width: 100%;
+      height:auto;
+      overflow-y: scroll;
+      //overflow: hidden;
+    }
+    /* Tooltip container */
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+    }
+    /* Tooltip text */
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 300px;
+      background-color: black;
+      color: #fff;
+      text-align: center;
+      padding: 5px 0;
+      border-radius: 6px;
+      /* Position the tooltip text - see examples below! */
+      position: absolute;
+      z-index: 1;
+    }
+    /* Show the tooltip text when you mouse over the tooltip container */
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      font-size: 50%
+    }
+    .ButtonVideo {
+      background-color: #461D7C;
+      border: none;
+      color: white;
+      padding: 5px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      margin: 0px 0px;
+      cursor: pointer;
+      outline: none;
+      width:80px;
+      height:80px;
+      border-radius: 4px
+    }
+    .ButtonVideo.active {
+      background-color: #461D7C;
+    }
+    .ButtonVideo:hover {
+      background-color: #461D7C;
+    }
+    .ButtonVideo.disabled {
+      background-color: gray;
+    }
+
+    /*Video*/
+    video {
+      -moz-transition: all 1s ease;
+      -ms-transition: all 1s ease;
+      -o-transition: all 1s ease;
+      -webkit-transition: all 1s ease;
+      transition: all 1s ease;
+      vertical-align: top;
+      width: 100px;
+      height: 150px;
+    }
+
+
+  </style>
 </head>
 
 <body>
-  <h1>Welcome to Meteor!</h1>
+  <div id="divMain" class="content">
+    <div class="listHeader" id="divHeader">
+      <h1>Online Teaching</h1>
+      <h3>Help the student and teacher/ta/tutors in case of physical absence</h3>
+    </div>
+    <div class="listChatVideoControls" id="divChatVideoControls">
+      <table>
+        <tr>
+          <td>CourseID: <input type="text" id="textRoomID"><br>
+          Password: <input type="text" id="textRoomPwd"></td>
+          <td><button id="butOpenRoom" class="ButtonVideo">Open room</button></td>
+          <td><button id="butJoinRoom" class="ButtonVideo">Join room</button></td>
+          <td><button id="butLeaveRoom" class="ButtonVideo">Leave room</button></td>
+          <td><button id="butShareScreen" class="ButtonVideo">Share screen</button></td>
+          <td><button id="butViewScreen" class="ButtonVideo">View screens</button></td>
+          <td>Online teaching is a freely available proof of concept and is not production ready.<br> So, please be fair to each other to make its best use.<br> It should only be used for personal purpose and use it at your own risk.<br> It may not be maintained in future</td>
+        </tr>
+      </table>
+    </div>
+    <div class="listChatVideos" id="divChatVideos">
+      <div id="videoDiv" style="display:inline-block; height:270px; width:350px; border:1px solid #461D7C; overflow-y: scroll; background-color:#ffffff">
+        Virtual class room
+        <div id="visVideo" style="display:inline-block; width:100%; height:2700px; background:#f1f1f1; border:5px solid #f1f1f1; background-repeat: no-repeat; background-size: contain; overflow-y: scroll;"> </div>
+      </div>
+      <div id="chatDiv" style="display:inline-block; height:270px; width:300px; border:1px solid #461D7C; overflow-y: scroll;">
+        <input type="text" id="input-text-chat" placeholder="Enter Text Chat"> <br>
+        <div id="chat-container" style="display:inline-block; height:270px; width:300px; border:1px solid #461D7C; overflow-y: scroll;">
+          <div id="file-container"></div>
+          <div class="chat-output"></div>
+        </div>
 
-  {{> hello}}
-  {{> info}}
+      </div>
+      <div id="screenDiv" style="display:inline-block; height:270px; width:600px; border:1px solid #461D7C; overflow-y: scroll;">
+        Share screen
+        <div id="evtLiveReport" style="display:inline-block; width:100%; height:270px; background:#f1f1f1; border:5px solid #f1f1f1; background-repeat: no-repeat; background-size: contain; overflow-y: scroll;">
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+
+  <!--<h1>Welcome to Meteor!</h1>-->
+
+ <!-- {{> hello}}-->
+  <!--{{> info}}-->
 </body>
 
 <template name="hello">
