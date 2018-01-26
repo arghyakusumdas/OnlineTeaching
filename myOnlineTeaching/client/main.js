@@ -102,11 +102,12 @@ getUserMedia({ video: true, audio: true }, function (err, stream) { //Possibly d
   //**********************************************//
   document.getElementById('input-text-chat').onkeyup = function(e) {
       if (e.keyCode != 13) { return;}
+      var yourName = document.getElementById('input-text-name').value
       // removing trailing/leading whitespace
       this.value = this.value.replace(/^\s+|\s+$/g, '');
-      if (!this.value.length) return;
-      connection.send(this.value);
-      appendDIV(this.value);
+      if (!yourName.length || !this.value.length) return;
+      connection.send(yourName + ':' + this.value);
+      appendDIV(yourName+ ':' + this.value);
       this.value = '';
   };
   var chatContainer = document.querySelector('.chat-output');
